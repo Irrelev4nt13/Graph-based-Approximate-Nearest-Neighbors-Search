@@ -1,0 +1,37 @@
+{
+    "version": "2.0.0",
+    "options": {
+        "cwd": "${workspaceFolder}"
+    },
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "clean",
+            "command": "make clean",
+        },
+        {
+            "type": "shell",
+            "label": "compile-deb-graph",
+            "command": "make deb-graph",
+            "dependsOn": "clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "compile-graph",
+            "command": "make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "run graph",
+            "command": "make run-graph",
+        }
+    ]
+}

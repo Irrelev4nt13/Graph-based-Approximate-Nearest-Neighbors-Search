@@ -1,0 +1,49 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "graph debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/graph_search-deb",
+            "cwd": "${fileDirname}",
+            "args": [
+                "-d",
+                "datasets/train-images.idx3-ubyte",
+                "-q",
+                "datasets/t10k-images.idx3-ubyte",
+                "-k",
+                "1",
+                "-E",
+                "4",
+                "-R",
+                "2",
+                "-N",
+                "5",
+                "-l",
+                "1",
+                "-m",
+                "1",
+                "-o",
+                "output.txt",
+            ],
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "preLaunchTask": "compile-deb-graph",
+            "MIMode": "gdb",
+            "miDebuggerArgs": "-q -ex quit; wait() { fg >/dev/null; }; /bin/gdb -q --interpreter=mi",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}
