@@ -8,7 +8,6 @@
 #include <cstdint>
 
 #include "PublicTypes.hpp"
-#include "Cluster.hpp"
 
 void readFilenameIfEmpty(std::string &filename, std::string fileType);
 
