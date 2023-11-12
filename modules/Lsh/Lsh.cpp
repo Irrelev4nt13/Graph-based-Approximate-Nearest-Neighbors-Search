@@ -54,7 +54,7 @@ std::vector<Neighbor> Lsh::Approximate_kNN(ImagePtr query)
       nearestNeighbors.insert(Neighbor(input, dist));
 
       // In order to save space we only store numNn of approximate nearest neighbors
-      if (nearestNeighbors.size() > numNn)
+      if ((int)nearestNeighbors.size() > numNn)
         nearestNeighbors.erase(std::prev(nearestNeighbors.end()));
     }
   }

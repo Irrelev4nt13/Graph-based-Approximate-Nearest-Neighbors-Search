@@ -26,11 +26,11 @@ public:
     GraphsCmdArgs(const int argc, const char *argv[]) : inputFile(""),
                                                         queryFile(""),
                                                         outputFile(""),
+                                                        m(-1),
+                                                        l(-1),
                                                         graphNN(50),
                                                         extensions(30),
-                                                        restarts(1),
-                                                        m(-1),
-                                                        l(-1)
+                                                        restarts(1)
     {
         for (int i = 0; i < argc; i++)
         {
