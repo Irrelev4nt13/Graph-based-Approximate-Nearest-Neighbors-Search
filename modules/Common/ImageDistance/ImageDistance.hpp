@@ -18,7 +18,7 @@ class ImageDistance
 private:
     static DistanceMetric metric;
 
-    static ImageDistance *instance;
+    static ImageDistance instance;
 
     static bool isMetricSet;
 
