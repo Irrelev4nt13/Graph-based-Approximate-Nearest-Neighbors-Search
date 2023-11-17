@@ -9,6 +9,8 @@
 #include "FileParser.hpp"
 #include "BruteForce.hpp"
 #include "ImageDistance.hpp"
+#include "GraphAlgorithm.hpp"
+#include "Mrng.hpp"
 
 int main(int argc, char const *argv[])
 {
@@ -35,25 +37,30 @@ int main(int argc, char const *argv[])
 
     // Initialize Graphs
     std::string graph_algorithm_name = "";
+
+    GraphAlgorithm *graphAlgorithm;
+
     if (args.numNn < 1)
     {
         std::cerr << "Error, the number of nearest neighbors has to be positive" << std::endl;
         return EXIT_FAILURE;
     }
+
     if (args.m == 1)
     {
-        ; // GNNS initialization
+        // GNNS initialization
         graph_algorithm_name = "GNNS";
     }
     else if (args.m == 2)
     {
-        ; // MRNG initialization
+        // MRNG initialization
         if (args.l < args.numNn)
         {
             std::cerr << "Error, the number of candidates must be greater or equal to the number of nearest neighbors" << std::endl;
             return EXIT_FAILURE;
         }
         graph_algorithm_name = "MRNG";
+        graphAlgorithm = new Mrng(input_images);
     }
     else
     {

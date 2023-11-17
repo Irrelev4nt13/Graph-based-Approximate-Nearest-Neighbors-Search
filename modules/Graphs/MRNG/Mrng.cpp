@@ -41,3 +41,11 @@ Mrng::~Mrng() {}
 
 // // Sort the edges
 // std::sort(edges.begin(), edges.end(), CompareEdge());
+
+std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query)
+{
+}
+
+std::vector<ImagePtr> Mrng::Approximate_Range_Search(ImagePtr query, const double radius)
+{
+}
