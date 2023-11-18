@@ -9,7 +9,7 @@ class Mrng : public GraphAlgorithm
 {
 private:
     ImageDistance *distHelper;
-    std::vector<ImagePtr> graph;
+    std::vector<std::vector<ImagePtr>> graph;
 
 public:
     Mrng(const std::vector<ImagePtr> &images);

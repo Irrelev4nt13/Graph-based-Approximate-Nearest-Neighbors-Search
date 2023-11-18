@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <limits>
 
 #include "Mrng.hpp"
 #include "GraphTypes.hpp"
@@ -21,6 +22,53 @@ Mrng::Mrng(const std::vector<ImagePtr> &images)
         }
 
         std::sort(Rp.begin(), Rp.end(), CompDistanceToRefImage(images[i], distHelper));
+
+        std::vector<ImagePtr> Lp;
+
+        double minDistance = std::numeric_limits<double>::infinity();
+        for (const auto &point : Rp)
+        {
+            double distance = distHelper->calculate(point, images[i]);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                Lp.clear();
+                Lp.push_back(point);
+            }
+            else if (distance == minDistance)
+            {
+                Lp.push_back(point);
+            }
+        }
+
+        for (const auto &r : Rp)
+        {
+            if (std::find(Lp.begin(), Lp.end(), r) != Lp.end())
+            {
+                continue; // r found in Lp
+            }
+
+            bool condition = true;
+            for (const auto &t : Lp)
+            {
+                double prDistance = distHelper->calculate(images[i], r);
+                double ptDistance = distHelper->calculate(images[i], t);
+                double rtDistance = distHelper->calculate(r, t);
+
+                if (prDistance > ptDistance && prDistance > rtDistance)
+                {
+                    condition = false;
+                    break; // pr is the longest edge, so r is not added to Lp.
+                }
+            }
+
+            if (condition)
+            {
+                Lp.push_back(r);
+            }
+        }
+
+        graph.push_back(Lp);
     }
 }
 
