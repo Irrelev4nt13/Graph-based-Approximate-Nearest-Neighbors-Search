@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
+#include <queue>
+#include <unordered_set>
 
 #include "Mrng.hpp"
 #include "GraphTypes.hpp"
@@ -74,26 +76,9 @@ Mrng::Mrng(const std::vector<ImagePtr> &images)
 
 Mrng::~Mrng() {}
 
-// std::vector<Edge> edges;
-
-// // Calculate distances all between image pairs
-// for (int i = 0; i < images.size(); i++)
-// {
-
-//     for (int j = i + 1; j < images.size(); j++)
-//     {
-//         double dist = distHelper->calculate(images[i], images[j]);
-//         edges.push_back(Edge(images[i], images[j], dist));
-//     }
-// }
-
-// // Sort the edges
-// std::sort(edges.begin(), edges.end(), CompareEdge());
-
-std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query)
+std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query, int k)
 {
-}
-
-std::vector<ImagePtr> Mrng::Approximate_Range_Search(ImagePtr query, const double radius)
-{
+    std::priority_queue<KNNResult, std::vector<KNNResult>, std::greater<KNNResult>> pq;
+    std::unordered_set<size_t> visited;
+    std::vector<KNNResult> results;
 }

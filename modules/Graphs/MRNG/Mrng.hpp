@@ -14,6 +14,16 @@ private:
 public:
     Mrng(const std::vector<ImagePtr> &images);
     ~Mrng();
-    std::vector<Neighbor> Approximate_kNN(ImagePtr query);
-    std::vector<ImagePtr> Approximate_Range_Search(ImagePtr query, const double radius);
+    std::vector<Neighbor> Approximate_kNN(ImagePtr query, int k);
+};
+
+class KNNResult
+{
+public:
+    ImagePtr image;
+    double distance;
+    bool operator>(const KNNResult &other) const
+    {
+        return distance > other.distance;
+    }
 };

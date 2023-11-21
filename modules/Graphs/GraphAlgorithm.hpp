@@ -8,8 +8,7 @@
 class GraphAlgorithm
 {
 public:
-    virtual std::vector<Neighbor> Approximate_kNN(ImagePtr query) = 0;
-    virtual std::vector<ImagePtr> Approximate_Range_Search(ImagePtr query, const double radius) = 0;
+    virtual std::vector<Neighbor> Approximate_kNN(ImagePtr query, int k) = 0;
 };
 
 #endif
