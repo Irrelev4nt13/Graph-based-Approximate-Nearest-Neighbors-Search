@@ -1,10 +1,9 @@
 CXX := g++
-FLAGS = -std=c++11
+FLAGS = -std=c++11 -Wall -Wextra
 RELEASE_FLAGS := -O2
-DEVELOPMENT_FLAGS := -Wall -Wextra
 DEBUG_FLAGS := -g3 -DDEBUG
 
-FLAGS += $(DEVELOPMENT_FLAGS)
+FLAGS += $(RELEASE_FLAGS)
 
 BIN_DIR := bin
 BUILD_DIR := build
@@ -76,7 +75,7 @@ ARGS_LSH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-uby
 
 ARGS_CUBE := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 14 -M 6000 -probes 15 -o output_cube.txt -N 5 -R 10000
 
-ARGS_GRAPH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 40 -E 20 -R 1 -N 3 -l 10 -m 1 -o output_graph.txt
+ARGS_GRAPH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 40 -E 30 -R 15 -N 3 -l 10 -m 1 -o output_graph.txt
 
 run-lsh: lsh
 	./$(LSH) $(ARGS_LSH)

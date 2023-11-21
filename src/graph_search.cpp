@@ -1,10 +1,11 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <chrono>
 
 #include "Image.hpp"
 #include "Utils.hpp"
-#include "Lsh.hpp"
+#include "Gnns.hpp"
 #include "GraphsCmdArgs.hpp"
 #include "FileParser.hpp"
 #include "BruteForce.hpp"
@@ -27,13 +28,14 @@ int main(int argc, char const *argv[])
     std::ofstream output_file;
 
     // window
-    int w = 2240;
-    int numBuckets = inputParser.GetMetadata().numOfImages / 8; // n / 8
+    // int w = 2240;
+    // int numBuckets = inputParser.GetMetadata().numOfImages / 8; // n / 8
 
     // Configure the metric used for the lsh program
     ImageDistance::setMetric(DistanceMetric::EUCLIDEAN);
 
     // Initialize Graphs
+    // GNNS *gnns = nullptr;
     std::string graph_algorithm_name = "";
     if (args.numNn < 1)
     {
@@ -43,6 +45,7 @@ int main(int argc, char const *argv[])
     if (args.m == 1)
     {
         ; // GNNS initialization
+        // gnns = new GNNS();
         graph_algorithm_name = "GNNS";
     }
     else if (args.m == 2)
@@ -61,6 +64,17 @@ int main(int argc, char const *argv[])
         return EXIT_FAILURE;
     }
 
+    GNNS gnns(input_images, args.graphNN, args.expansions, args.restarts, args.numNn);
+
+    auto tTotalApproximate = std::chrono::nanoseconds(0);
+    auto tTotalTrue = std::chrono::nanoseconds(0);
+    double MAF = -1;
+
+    // std::cout << RealDistribution(0, 2) << std::endl;
+    // std::cout << IntDistribution(0, 2) << std::endl;
+    // std::cout << NormalDistribution(1.0, 5.0) << std::endl
+    //           << std::endl
+    //           << std::endl;
     // Keep reading new query and output files until the user types "exit"
     while (true)
     {
@@ -70,8 +84,8 @@ int main(int argc, char const *argv[])
 
         output_file.open(args.outputFile);
 
-        output_file << graph_algorithm_name << std::endl;
-
+        output_file << graph_algorithm_name << " Results" << std::endl;
+        // gnns->hello_world();
         // For each query data point calculate its approximate k nearesest neighbors with the preferable graph algorithm and compare it to brute force
         // for (int q = 0; q < (int)query_images.size(); q++)
         for (int q = 0; q < 10; q++)
@@ -79,43 +93,44 @@ int main(int argc, char const *argv[])
             ImagePtr query = query_images[q];
 
             startClock();
-            // std::vector<Neighbor> approx_vector = lsh.Approximate_kNN(query);
-            auto elapsed_lsh = stopClock();
+            std::vector<Neighbor> approx_vector = gnns.Approximate_kNN(query);
+            auto elapsed_graph = stopClock();
+            tTotalApproximate += elapsed_graph;
 
             startClock();
             std::vector<Neighbor> brute_vector = BruteForce(input_images, query, args.numNn);
             auto elapsed_brute = stopClock();
+            tTotalTrue += elapsed_brute;
 
             output_file << "Query: " << query->id << std::endl;
 
-            // int limit = approx_vector.size();
-            // for (int i = 0; i < limit; i++)
-            // {
-            //     ImagePtr image = approx_vector[i].image;
-            //     double dist = approx_vector[i].distance;
+            int limit = approx_vector.size();
+            for (int i = 0; i < limit; i++)
+            {
+                ImagePtr image = approx_vector[i].image;
+                double aproxDist = approx_vector[i].distance;
 
-            //     output_file << "Nearest neighbor-" << i + 1 << ": " << image->id << std::endl
-            //                 << "distanceLSH: " << dist << "\n";
+                output_file << "Nearest neighbor-" << i + 1 << ": " << image->id << std::endl
+                            << "distance" << graph_algorithm_name << "Approximate: " << aproxDist << "\n";
 
-            //     dist = brute_vector[i].distance;
-            //     output_file << "distanceTrue: " << dist << "\n";
-            // }
+                double trueDist = brute_vector[i].distance;
+                output_file << "distanceTrue: " << trueDist << "\n";
 
-            output_file << "t " << graph_algorithm_name << ": " << elapsed_lsh.count() * 1e-9 << std::endl;
+                if (aproxDist / trueDist > MAF || MAF == -1)
+                    MAF = aproxDist / trueDist;
+            }
+
+            output_file << "t" << graph_algorithm_name << ": " << elapsed_graph.count() * 1e-9 << std::endl;
             output_file << "tTrue: " << elapsed_brute.count() * 1e-9 << std::endl;
 
             output_file << std::endl;
         }
 
-        output_file << std::endl
-                    << std::endl
-                    << "Total Statistics: " << std::endl;
-        output_file << "\ttTotalApproximate: " << std::endl;   // Total Approximate time
-        output_file << "\ttTotalTrue: " << std::endl;          // Total True time
-        output_file << "\ttAverageApproximate: " << std::endl; // Average Approximate time
-        output_file << "\ttAverageTrue: " << std::endl;        // Average True time
-        output_file << "\tAAF: " << std::endl;                 // Average Approximation Factor
-        output_file << "\tMAF: " << std::endl;                 // Maximum Approximation Factor
+        output_file << "tTotalApproximate: " << tTotalApproximate.count() * 1e-9 << std::endl;        // Total Approximate time
+        output_file << "tTotalTrue: " << tTotalTrue.count() * 1e-9 << std::endl;                      // Total True time
+        output_file << "tAverageApproximate: " << tTotalApproximate.count() * 1e-9 / 10 << std::endl; // Average Approximate time
+        output_file << "tAverageTrue: " << tTotalTrue.count() * 1e-9 / 10 << std::endl;               // Average True time
+        output_file << "MAF: " << MAF;                                                                // Maximum Approximation Factor
 
         // Read new query and output files.
         args.queryFile.clear();
