@@ -28,21 +28,7 @@ Mrng::Mrng(const std::vector<ImagePtr> &images)
 
         std::vector<ImagePtr> Lp;
 
-        double minDistance = std::numeric_limits<double>::infinity();
-        for (const auto &point : Rp)
-        {
-            double distance = distHelper->calculate(point, images[i]);
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                Lp.clear();
-                Lp.push_back(point);
-            }
-            else if (distance == minDistance)
-            {
-                Lp.push_back(point);
-            }
-        }
+        Lp.push_back(Rp[0]);
 
         for (const auto &r : Rp)
         {
