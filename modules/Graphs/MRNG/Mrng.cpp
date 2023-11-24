@@ -15,15 +15,16 @@ Mrng::Mrng(const std::vector<ImagePtr> &images)
 
     for (std::size_t i = 0; i < images.size(); i++)
     {
-        std::vector<ImagePtr> Rp;
+        startClock();
+        std::vector<ImagePtr> Rp = images;
 
-        for (std::size_t j = 0; j < images.size(); j++)
-        {
-            if (i != j)
-                Rp.push_back(images[j]);
-        }
+        Rp.erase(Rp.begin() + i);
 
         std::sort(Rp.begin(), Rp.end(), CompDistanceToRefImage(images[i], distHelper));
+
+        auto duration = stopClock();
+
+        std::cout << "duration: " << duration.count() * 1e-9 << std::endl;
 
         std::vector<ImagePtr> Lp;
 
