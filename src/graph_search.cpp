@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
             ImagePtr query = query_images[q];
 
             startClock();
-            std::vector<Neighbor> approx_vector = graphAlgorithm->Approximate_kNN(query, 1);
+            std::vector<Neighbor> approx_vector = graphAlgorithm->Approximate_kNN(query, 5);
             auto elapsed_lsh = stopClock();
 
             startClock();
@@ -102,7 +102,7 @@ int main(int argc, char const *argv[])
                 double dist = approx_vector[i].distance;
 
                 output_file << "Nearest neighbor-" << i + 1 << ": " << image->id << std::endl
-                            << "distanceLSH: " << dist << "\n";
+                            << "distanceGraph: " << dist << "\n";
 
                 dist = brute_vector[i].distance;
                 output_file << "distanceTrue: " << dist << "\n";
