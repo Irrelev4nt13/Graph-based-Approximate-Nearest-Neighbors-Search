@@ -36,7 +36,7 @@ FileParser::FileParser(std::string inputFile)
 
     metadata.magicNumber = ntohl(metadata.magicNumber);
     // metadata.numOfImages = ntohl(metadata.numOfImages);
-    metadata.numOfImages = 100;
+    metadata.numOfImages = 1000;
     metadata.numOfRows = ntohl(metadata.numOfRows);
     metadata.numOfColumns = ntohl(metadata.numOfColumns);
 

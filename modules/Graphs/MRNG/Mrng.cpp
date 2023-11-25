@@ -18,8 +18,18 @@ Mrng::Mrng(const std::vector<ImagePtr> &images)
     // useBruteForce(images);
 
     // lsh method. Uncomment to use
+    startClock();
     Lsh *lsh = new Lsh(images, 4, 5, (int)images.size(), 2240, (int)images.size() / 8);
+    auto lshDuration = stopClock();
+    std::cout << "lsh construction finished in: " << lshDuration.count() * 1e-9 << std::endl;
+
+    startClock();
+
     useLsh(images, lsh);
+
+    auto mrngDuration = stopClock();
+    std::cout << "mrng construction finished in: " << mrngDuration.count() * 1e-9 << std::endl;
+
     delete lsh;
 }
 
@@ -77,22 +87,27 @@ void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
 {
     for (std::size_t i = 0; i < images.size(); i++)
     {
-        startClock();
         std::vector<Neighbor> Rp = lsh->Approximate_kNN(images[i]);
 
-        auto duration = stopClock();
+        // startClock();
 
-        std::cout << "duration: " << duration.count() * 1e-9 << std::endl;
-
+        // Initialize Lp with points that have minimum distance to p (images[i])
         std::vector<ImagePtr> Lp;
-
-        Lp.push_back(Rp[0].image);
+        double minApproxDistance = Rp[0].distance;
+        for (int j = 0; j < Rp.size(); j++)
+        {
+            if (Rp[j].distance != minApproxDistance)
+            {
+                break;
+            }
+            Lp.push_back(Rp[j].image);
+        }
 
         for (const auto &r : Rp)
         {
             if (std::find(Lp.begin(), Lp.end(), r.image) != Lp.end())
             {
-                continue; // r found in Lp
+                continue;
             }
 
             bool condition = true;
@@ -114,6 +129,10 @@ void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
                 Lp.push_back(r.image);
             }
         }
+
+        // auto duration = stopClock();
+
+        // std::cout << "duration: " << duration.count() * 1e-9 << std::endl;
 
         graph.push_back(Lp);
     }
