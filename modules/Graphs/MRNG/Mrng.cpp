@@ -8,11 +8,23 @@
 #include "Mrng.hpp"
 #include "GraphTypes.hpp"
 #include "Utils.hpp"
+#include "Lsh.hpp"
 
 Mrng::Mrng(const std::vector<ImagePtr> &images)
 {
     distHelper = ImageDistance::getInstance();
 
+    // brute force. Uncomment to use
+    // useBruteForce(images);
+
+    // lsh method. Uncomment to use
+    Lsh *lsh = new Lsh(images, 4, 5, (int)images.size(), 2240, (int)images.size() / 8);
+    useLsh(images, lsh);
+    delete lsh;
+}
+
+void Mrng::useBruteForce(const std::vector<ImagePtr> &images)
+{
     for (std::size_t i = 0; i < images.size(); i++)
     {
         startClock();
@@ -54,6 +66,52 @@ Mrng::Mrng(const std::vector<ImagePtr> &images)
             if (condition)
             {
                 Lp.push_back(r);
+            }
+        }
+
+        graph.push_back(Lp);
+    }
+}
+
+void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
+{
+    for (std::size_t i = 0; i < images.size(); i++)
+    {
+        startClock();
+        std::vector<Neighbor> Rp = lsh->Approximate_kNN(images[i]);
+
+        auto duration = stopClock();
+
+        std::cout << "duration: " << duration.count() * 1e-9 << std::endl;
+
+        std::vector<ImagePtr> Lp;
+
+        Lp.push_back(Rp[0].image);
+
+        for (const auto &r : Rp)
+        {
+            if (std::find(Lp.begin(), Lp.end(), r.image) != Lp.end())
+            {
+                continue; // r found in Lp
+            }
+
+            bool condition = true;
+            for (const auto &t : Lp)
+            {
+                double prDistance = distHelper->calculate(images[i], r.image);
+                double ptDistance = distHelper->calculate(images[i], t);
+                double rtDistance = distHelper->calculate(r.image, t);
+
+                if (prDistance > ptDistance && prDistance > rtDistance)
+                {
+                    condition = false;
+                    break; // pr is the longest edge, so r is not added to Lp.
+                }
+            }
+
+            if (condition)
+            {
+                Lp.push_back(r.image);
             }
         }
 

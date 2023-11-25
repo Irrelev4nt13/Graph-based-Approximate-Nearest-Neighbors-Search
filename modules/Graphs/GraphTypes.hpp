@@ -23,20 +23,20 @@ public:
     }
 };
 
-class CompDistanceWithLsh
-{
-private:
-    ImagePtr referenceImage;
-    Lsh *lshApproximator;
+// class CompDistanceWithLsh
+// {
+// private:
+//     ImagePtr referenceImage;
+//     Lsh *lshApproximator;
 
-public:
-    CompDistanceWithLsh(ImagePtr refImage, Lsh *lshApproximator)
-        : referenceImage(refImage), lshApproximator(lshApproximator) {}
+// public:
+//     CompDistanceWithLsh(ImagePtr refImage, Lsh *lshApproximator)
+//         : referenceImage(refImage), lshApproximator(lshApproximator) {}
 
-    bool operator()(const ImagePtr &img1, const ImagePtr &img2) const
-    {
-        lshApproximator->Approximate_kNN(img1);
-    }
-};
+//     bool operator()(const ImagePtr &img1, const ImagePtr &img2) const
+//     {
+//         lshApproximator->Approximate_kNN(img1);
+//     }
+// };
 
 #endif
