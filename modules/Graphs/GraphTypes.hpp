@@ -3,6 +3,7 @@
 
 #include "PublicTypes.hpp"
 #include "ImageDistance.hpp"
+#include "Lsh.hpp"
 
 class CompDistanceToRefImage
 {
@@ -22,24 +23,20 @@ public:
     }
 };
 
-// class Edge
-// {
-// public:
-//     ImagePtr image1;
-//     ImagePtr image2;
-//     double distance;
-//     Edge(ImagePtr image1, ImagePtr image2, double distance)
-//         : image1(image1), image2(image2), distance(distance){};
-//     ~Edge(){};
-// };
+class CompDistanceWithLsh
+{
+private:
+    ImagePtr referenceImage;
+    Lsh *lshApproximator;
 
-// class CompareEdge
-// {
-// public:
-//     bool operator()(const Edge &a, const Edge &b) const
-//     {
-//         return a.distance < b.distance;
-//     }
-// };
+public:
+    CompDistanceWithLsh(ImagePtr refImage, Lsh *lshApproximator)
+        : referenceImage(refImage), lshApproximator(lshApproximator) {}
+
+    bool operator()(const ImagePtr &img1, const ImagePtr &img2) const
+    {
+        lshApproximator->Approximate_kNN(img1);
+    }
+};
 
 #endif
