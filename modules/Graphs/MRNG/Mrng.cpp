@@ -10,10 +10,8 @@
 #include "Utils.hpp"
 #include "Lsh.hpp"
 
-Mrng::Mrng(const std::vector<ImagePtr> &images)
+Mrng::Mrng(const std::vector<ImagePtr> &images, int l) : distHelper(ImageDistance::getInstance()), candidates(l)
 {
-    distHelper = ImageDistance::getInstance();
-
     // brute force. Uncomment to use
     // useBruteForce(images);
 
@@ -85,17 +83,24 @@ void Mrng::useBruteForce(const std::vector<ImagePtr> &images)
 
 void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
 {
+    this->centroid = nullptr;
+
     for (std::size_t i = 0; i < images.size(); i++)
     {
         // Get Rp sorted by Lsh distance approximation algorithm
         std::vector<Neighbor> Rp = lsh->Approximate_kNN(images[i]);
+
+        if (!this->centroid)
+        {
+            this->centroid = Rp[images.size() / 2].image;
+        }
 
         // startClock();
 
         // Initialize Lp with points that have minimum distance to p (images[i])
         std::vector<ImagePtr> Lp;
         double minApproxDistance = Rp[0].distance;
-        for (int j = 0; j < Rp.size(); j++)
+        for (int j = 0; j < (int)Rp.size(); j++)
         {
             if (Rp[j].distance != minApproxDistance)
             {
@@ -104,7 +109,7 @@ void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
             Lp.push_back(Rp[j].image);
         }
 
-        for (int r = 0; r < Rp.size(); r++)
+        for (int r = 0; r < (int)Rp.size(); r++)
         {
             if (std::find(Lp.begin(), Lp.end(), Rp[r].image) != Lp.end())
             {
@@ -112,7 +117,7 @@ void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
             }
 
             bool condition = true;
-            for (int t = 0; t < Lp.size(); t++)
+            for (int t = 0; t < (int)Lp.size(); t++)
             {
                 double prDistance = Rp[r].distance;
                 double ptDistance = distHelper->calculate(images[i], Lp[t]);
@@ -143,7 +148,7 @@ Mrng::~Mrng() {}
 
 std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query, int k)
 {
-    std::priority_queue<KNNResult, std::vector<KNNResult>, std::greater<KNNResult>> pq;
+    std::priority_queue<Neighbor, std::vector<Neighbor>, CompareNeighbor> pq;
     std::unordered_set<size_t> visited;
-    std::vector<KNNResult> results;
+    std::vector<Neighbor> results;
 }
