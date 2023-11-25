@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
             ImagePtr query = query_images[q];
 
             startClock();
-            // std::vector<Neighbor> approx_vector = lsh.Approximate_kNN(query);
+            std::vector<Neighbor> approx_vector = graphAlgorithm->Approximate_kNN(query, 1);
             auto elapsed_lsh = stopClock();
 
             startClock();
@@ -95,18 +95,18 @@ int main(int argc, char const *argv[])
 
             output_file << "Query: " << query->id << std::endl;
 
-            // int limit = approx_vector.size();
-            // for (int i = 0; i < limit; i++)
-            // {
-            //     ImagePtr image = approx_vector[i].image;
-            //     double dist = approx_vector[i].distance;
+            int limit = approx_vector.size();
+            for (int i = 0; i < limit; i++)
+            {
+                ImagePtr image = approx_vector[i].image;
+                double dist = approx_vector[i].distance;
 
-            //     output_file << "Nearest neighbor-" << i + 1 << ": " << image->id << std::endl
-            //                 << "distanceLSH: " << dist << "\n";
+                output_file << "Nearest neighbor-" << i + 1 << ": " << image->id << std::endl
+                            << "distanceLSH: " << dist << "\n";
 
-            //     dist = brute_vector[i].distance;
-            //     output_file << "distanceTrue: " << dist << "\n";
-            // }
+                dist = brute_vector[i].distance;
+                output_file << "distanceTrue: " << dist << "\n";
+            }
 
             output_file << "t " << graph_algorithm_name << ": " << elapsed_lsh.count() * 1e-9 << std::endl;
             output_file << "tTrue: " << elapsed_brute.count() * 1e-9 << std::endl;

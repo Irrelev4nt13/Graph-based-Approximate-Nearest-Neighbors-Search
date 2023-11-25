@@ -11,7 +11,7 @@ class Mrng : public GraphAlgorithm
 private:
     ImageDistance *distHelper;
     std::vector<std::vector<ImagePtr>> graph;
-    ImagePtr centroid;
+    Neighbor *navNode;
     int candidates;
 
     void useBruteForce(const std::vector<ImagePtr> &images);

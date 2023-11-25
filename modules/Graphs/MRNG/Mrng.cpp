@@ -17,7 +17,7 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int l) : distHelper(ImageDistanc
 
     // lsh method. Uncomment to use
     startClock();
-    Lsh *lsh = new Lsh(images, 4, 5, (int)images.size(), 2240, (int)images.size() / 8);
+    Lsh *lsh = new Lsh(images, 4, 5, (int)images.size() - 1, 2240, (int)images.size() / 8);
     auto lshDuration = stopClock();
     std::cout << "lsh construction finished in: " << lshDuration.count() * 1e-9 << std::endl;
 
@@ -83,16 +83,20 @@ void Mrng::useBruteForce(const std::vector<ImagePtr> &images)
 
 void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
 {
-    this->centroid = nullptr;
+    this->navNode = nullptr;
 
     for (std::size_t i = 0; i < images.size(); i++)
     {
         // Get Rp sorted by Lsh distance approximation algorithm
-        std::vector<Neighbor> Rp = lsh->Approximate_kNN(images[i]);
+        Lsh *tempLsh = new Lsh(images, 4, 5, images.size(), 2240, images.size() / 8);
 
-        if (!this->centroid)
+        std::vector<Neighbor> Rp = tempLsh->Approximate_kNN(images[i]);
+
+        delete tempLsh;
+
+        if (!this->navNode)
         {
-            this->centroid = Rp[images.size() / 2].image;
+            this->navNode = new Neighbor(Rp[images.size() / 2]);
         }
 
         // startClock();
@@ -144,11 +148,46 @@ void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
     }
 }
 
-Mrng::~Mrng() {}
+Mrng::~Mrng()
+{
+    std::cout << "destructor" << std::endl;
+    delete navNode;
+}
 
 std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query, int k)
 {
-    std::priority_queue<Neighbor, std::vector<Neighbor>, CompareNeighbor> pq;
-    std::unordered_set<size_t> visited;
-    std::vector<Neighbor> results;
+    std::vector<ImagePtr> R;
+
+    R.push_back(navNode->image);
+
+    std::cout << "hello" << std::endl;
+
+    int i = 1;
+
+    while (i < candidates)
+    {
+        std::vector<ImagePtr> neighbors = graph[navNode->image->id];
+        std::cout << "hello2" << std::endl;
+
+        for (int k = 0; k < (int)neighbors.size(); k++)
+        {
+            if (std::find(R.begin(), R.end(), neighbors[k]) != R.end())
+            {
+                continue;
+            }
+            R.push_back(neighbors[k]);
+            i++;
+        }
+
+        std::sort(R.begin(), R.end(), CompDistanceToRefImage(navNode->image, distHelper));
+    }
+
+    std::vector<Neighbor> kNN;
+
+    for (int i = 0; i < k; i++)
+    {
+        kNN.push_back(Neighbor(R[i], distHelper->calculate(R[i], query)));
+    }
+
+    return kNN;
 }
