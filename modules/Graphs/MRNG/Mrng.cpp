@@ -87,6 +87,7 @@ void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
 {
     for (std::size_t i = 0; i < images.size(); i++)
     {
+        // Get Rp sorted by Lsh distance approximation algorithm
         std::vector<Neighbor> Rp = lsh->Approximate_kNN(images[i]);
 
         // startClock();
@@ -103,19 +104,19 @@ void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
             Lp.push_back(Rp[j].image);
         }
 
-        for (const auto &r : Rp)
+        for (int r = 0; r < Rp.size(); r++)
         {
-            if (std::find(Lp.begin(), Lp.end(), r.image) != Lp.end())
+            if (std::find(Lp.begin(), Lp.end(), Rp[r].image) != Lp.end())
             {
                 continue;
             }
 
             bool condition = true;
-            for (const auto &t : Lp)
+            for (int t = 0; t < Lp.size(); t++)
             {
-                double prDistance = distHelper->calculate(images[i], r.image);
-                double ptDistance = distHelper->calculate(images[i], t);
-                double rtDistance = distHelper->calculate(r.image, t);
+                double prDistance = Rp[r].distance;
+                double ptDistance = distHelper->calculate(images[i], Lp[t]);
+                double rtDistance = distHelper->calculate(Rp[r].image, Lp[t]);
 
                 if (prDistance > ptDistance && prDistance > rtDistance)
                 {
@@ -126,7 +127,7 @@ void Mrng::useLsh(const std::vector<ImagePtr> &images, Lsh *lsh)
 
             if (condition)
             {
-                Lp.push_back(r.image);
+                Lp.push_back(Rp[r].image);
             }
         }
 
