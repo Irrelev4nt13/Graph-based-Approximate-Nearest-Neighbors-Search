@@ -155,87 +155,38 @@ Mrng::~Mrng()
     delete navNode;
 }
 
-// std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query, int k)
-// {
-//     std::vector<ImagePtr> R;
-
-//     R.push_back(navNode->image);
-
-//     int i = 1;
-
-//     while (i < candidates)
-//     {
-//         std::vector<ImagePtr> neighbors = graph[navNode->image->id];
-
-//         for (int k = 0; k < (int)neighbors.size(); k++)
-//         {
-//             if (std::find(R.begin(), R.end(), neighbors[k]) != R.end())
-//             {
-//                 continue;
-//             }
-//             R.push_back(neighbors[k]);
-//             i++;
-//         }
-
-//         std::sort(R.begin(), R.end(), CompDistanceToRefImage(navNode->image, distHelper));
-//     }
-
-//     std::vector<Neighbor> kNN;
-
-//     for (int i = 0; i < k; i++)
-//     {
-//         kNN.push_back(Neighbor(R[i], distHelper->calculate(R[i], query)));
-//     }
-
-//     return kNN;
-// }
-
 std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query, int k)
 {
     std::vector<ImagePtr> R;
-    std::unordered_set<int> visited; // To keep track of visited nodes.
 
-    // Start with navNode
-    R.push_back(navNode->image);
-    visited.insert(navNode->image->id);
+    ImagePtr p = navNode->image;
 
-    while (R.size() < candidates)
+    R.push_back(p);
+
+    int i = 1;
+    int visitedCounter = 0;
+    while (i < candidates && (int)R.size() > visitedCounter)
     {
-        bool addedNew = false;
+        p = R[visitedCounter];
+        visitedCounter++;
+        std::vector<ImagePtr> neighbors = graph[p->id];
 
-        // Temporary vector to hold new neighbors
-        std::vector<ImagePtr> newNeighbors;
-
-        for (const auto &imgPtr : R)
+        for (int k = 0; k < (int)neighbors.size(); k++)
         {
-            std::vector<ImagePtr> neighbors = graph[imgPtr->id];
-
-            for (const auto &neighbor : neighbors)
+            if (std::find(R.begin(), R.end(), neighbors[k]) != R.end())
             {
-                if (visited.find(neighbor->id) == visited.end())
-                {
-                    newNeighbors.push_back(neighbor);
-                    visited.insert(neighbor->id);
-                    addedNew = true;
-                }
+                continue;
             }
+            R.push_back(neighbors[k]);
+            i++;
         }
 
-        // Sort and add new neighbors
-        std::sort(newNeighbors.begin(), newNeighbors.end(), CompDistanceToRefImage(navNode->image, distHelper));
-        R.insert(R.end(), newNeighbors.begin(), newNeighbors.end());
-
-        if (!addedNew)
-        {
-            break; // Break if no new neighbors are added
-        }
+        std::sort(R.begin(), R.end(), CompDistanceToRefImage(query, distHelper));
     }
 
-    // Now, R has the closest 'candidates' neighbors, sort them by distance to the query image.
-    std::sort(R.begin(), R.end(), CompDistanceToRefImage(query, distHelper));
-
     std::vector<Neighbor> kNN;
-    for (int i = 0; i < k && i < R.size(); i++)
+
+    for (int i = 0; i < k; i++)
     {
         kNN.push_back(Neighbor(R[i], distHelper->calculate(R[i], query)));
     }

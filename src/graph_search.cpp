@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
             ImagePtr query = query_images[q];
 
             startClock();
-            std::vector<Neighbor> approx_vector = graphAlgorithm->Approximate_kNN(query, 5);
+            std::vector<Neighbor> approx_vector = graphAlgorithm->Approximate_kNN(query, args.numNn);
             auto elapsed_lsh = stopClock();
 
             startClock();
