@@ -7,6 +7,31 @@
 #include "Utils.hpp"
 #include "BruteForce.hpp"
 
+class ThreadData
+{
+public:
+    std::vector<std::vector<Neighbor>> *Rps;
+    const std::vector<ImagePtr> *images;
+    int startIdx;
+    int endIdx;
+
+    ThreadData() {}
+
+    ThreadData(std::vector<std::vector<Neighbor>> *Rps, const std::vector<ImagePtr> *images, int startIdx, int endIdx)
+        : Rps(Rps), images(images), startIdx(startIdx), endIdx(endIdx) {}
+};
+
+void *ThreadFunction(void *threadData)
+{
+    ThreadData *data = (ThreadData *)threadData;
+    for (int i = data->startIdx; i < data->endIdx; i++)
+    {
+        (*data->Rps)[i] = BruteForce(*data->images, (*data->images)[i], data->images->size());
+        (*data->Rps)[i].erase((*data->Rps)[i].begin());
+    }
+    return NULL;
+}
+
 Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn), candidates(l),
                                                                     distHelper(ImageDistance::getInstance()), navNode(nullptr)
 {
@@ -14,11 +39,30 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
 
     std::vector<std::vector<Neighbor>> Rps(images.size()); // All Rp vectors
 
-    for (std::size_t i = 0; i < images.size(); i++)
+    const int numThreads = 8;
+    std::vector<pthread_t> threads(numThreads);
+    std::vector<ThreadData> threadData(numThreads);
+
+    int imagesPerThread = images.size() / numThreads;
+    int remainingImages = images.size() % numThreads;
+
+    for (int i = 0; i < numThreads; i++)
     {
-        // Get sorted Rp with brute force
-        Rps[i] = BruteForce(images, images[i], images.size());
-        Rps[i].erase(Rps[i].begin()); // Erase first element that is the same as the query
+        int startIdx = i * imagesPerThread;
+        int endIdx = startIdx + imagesPerThread + (i < remainingImages ? 1 : 0);
+
+        threadData[i] = ThreadData(&Rps, &images, startIdx, endIdx);
+
+        if (pthread_create(&threads[i], NULL, ThreadFunction, &threadData[i]))
+        {
+            std::cerr << "Error creating thread " << i << std::endl;
+            return;
+        }
+    }
+
+    for (int i = 0; i < numThreads; ++i)
+    {
+        pthread_join(threads[i], NULL);
     }
 
     for (std::size_t i = 0; i < images.size(); i++)
