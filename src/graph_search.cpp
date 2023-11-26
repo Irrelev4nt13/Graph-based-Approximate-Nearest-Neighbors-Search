@@ -60,7 +60,7 @@ int main(int argc, char const *argv[])
             return EXIT_FAILURE;
         }
         graph_algorithm_name = "MRNG";
-        graphAlgorithm = new Mrng(input_images);
+        graphAlgorithm = new Mrng(input_images, args.l, args.numNn);
     }
     else
     {

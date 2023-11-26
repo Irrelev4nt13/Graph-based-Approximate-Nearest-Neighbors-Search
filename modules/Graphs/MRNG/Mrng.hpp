@@ -9,13 +9,14 @@
 class Mrng : public GraphAlgorithm
 {
 private:
-    ImageDistance *distHelper;
-    std::vector<std::vector<ImagePtr>> graph;
-    ImagePtr navNode;
+    int numNn;
     int candidates;
+    ImageDistance *distHelper;
+    ImagePtr navNode;
+    std::vector<std::vector<ImagePtr>> graph;
 
 public:
-    Mrng(const std::vector<ImagePtr> &images, int l = 20);
+    Mrng(const std::vector<ImagePtr> &images, int numNn, int l);
     ~Mrng();
     std::vector<Neighbor> Approximate_kNN(ImagePtr query, int k);
 };

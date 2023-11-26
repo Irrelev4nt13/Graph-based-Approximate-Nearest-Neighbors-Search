@@ -3,7 +3,6 @@
 
 #include "PublicTypes.hpp"
 #include "ImageDistance.hpp"
-#include "Lsh.hpp"
 
 class CompDistanceToRefImage
 {
@@ -22,21 +21,5 @@ public:
         return dist1 < dist2;
     }
 };
-
-// class CompDistanceWithLsh
-// {
-// private:
-//     ImagePtr referenceImage;
-//     Lsh *lshApproximator;
-
-// public:
-//     CompDistanceWithLsh(ImagePtr refImage, Lsh *lshApproximator)
-//         : referenceImage(refImage), lshApproximator(lshApproximator) {}
-
-//     bool operator()(const ImagePtr &img1, const ImagePtr &img2) const
-//     {
-//         lshApproximator->Approximate_kNN(img1);
-//     }
-// };
 
 #endif

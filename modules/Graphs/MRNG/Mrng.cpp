@@ -10,7 +10,8 @@
 #include "Utils.hpp"
 #include "BruteForce.hpp"
 
-Mrng::Mrng(const std::vector<ImagePtr> &images, int l) : distHelper(ImageDistance::getInstance()), navNode(nullptr), candidates(l)
+Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn), candidates(l),
+                                                                    distHelper(ImageDistance::getInstance()), navNode(nullptr)
 {
     startClock();
 
@@ -66,7 +67,7 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int l) : distHelper(ImageDistanc
     }
 
     auto mrngDuration = stopClock();
-    std::cout << "mrng construction finished in: " << mrngDuration.count() * 1e-9 << std::endl;
+    std::cout << "Mrng index construction finished in: " << mrngDuration.count() * 1e-9 << std::endl;
 }
 
 Mrng::~Mrng() {}
