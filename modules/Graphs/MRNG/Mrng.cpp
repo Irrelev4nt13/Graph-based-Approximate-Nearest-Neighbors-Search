@@ -12,36 +12,40 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
 {
     startClock();
 
+    std::vector<std::vector<Neighbor>> Rps(images.size()); // All Rp vectors
+
     for (std::size_t i = 0; i < images.size(); i++)
     {
         // Get sorted Rp with brute force
-        std::vector<Neighbor> Rp = BruteForce(images, images[i], images.size());
+        Rps[i] = BruteForce(images, images[i], images.size());
+        Rps[i].erase(Rps[i].begin()); // Erase first element that is the same as the query
+    }
 
-        Rp.erase(Rp.begin()); // Erase first element that is the same as the query
-
+    for (std::size_t i = 0; i < images.size(); i++)
+    {
         // Calculate only once the navigating node
         if (!this->navNode)
         {
             // Set the median of the dataset as the navigating node
-            this->navNode = Rp[images.size() / 2].image;
+            this->navNode = Rps[i][images.size() / 2].image;
         }
 
         // Initialize Lp with points that have the minimum distance to p (images[i])
         std::vector<ImagePtr> Lp;
-        double minDistance = Rp[0].distance;
-        for (int j = 0; j < (int)Rp.size(); j++)
+        double minDistance = Rps[i][0].distance;
+        for (int j = 0; j < (int)Rps[i].size(); j++)
         {
-            if (Rp[j].distance > minDistance)
+            if (Rps[i][j].distance > minDistance)
             {
                 break; // No more points with the minimum distance to add
             }
-            Lp.push_back(Rp[j].image);
+            Lp.push_back(Rps[i][j].image);
         }
 
         // For each element of Rp check the Mrng condition and add it to Lp
-        for (int r = 0; r < (int)Rp.size(); r++)
+        for (int r = 0; r < (int)Rps[i].size(); r++)
         {
-            if (std::find(Lp.begin(), Lp.end(), Rp[r].image) != Lp.end())
+            if (std::find(Lp.begin(), Lp.end(), Rps[i][r].image) != Lp.end())
             {
                 continue; // Point already in Lp
             }
@@ -50,9 +54,9 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
             bool condition = true;
             for (int t = 0; t < (int)Lp.size(); t++)
             {
-                double prDistance = Rp[r].distance; // same as dist(images[i], Rp[r])
+                double prDistance = Rps[i][r].distance; // same as dist(images[i], Rp[r])
                 // double ptDistance = minDistance;    // same as dist(images[i], Lp[t])
-                double rtDistance = distHelper->calculate(Rp[r].image, Lp[t]);
+                double rtDistance = distHelper->calculate(Rps[i][r].image, Lp[t]);
 
                 // prDistance is always greater than ptDistance = minDistance since Rp is sorted
                 // Need to check between prDistance and rtDistance for triangle prt
@@ -66,7 +70,7 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
 
             if (condition)
             {
-                Lp.push_back(Rp[r].image);
+                Lp.push_back(Rps[i][r].image);
             }
         }
 
