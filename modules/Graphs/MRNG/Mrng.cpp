@@ -51,7 +51,7 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
             for (int t = 0; t < (int)Lp.size(); t++)
             {
                 double prDistance = Rp[r].distance; // same as dist(images[i], Rp[r])
-                double ptDistance = minDistance;    // same as dist(images[i], Lp[t])
+                // double ptDistance = minDistance;    // same as dist(images[i], Lp[t])
                 double rtDistance = distHelper->calculate(Rp[r].image, Lp[t]);
 
                 // prDistance is always greater than ptDistance = minDistance since Rp is sorted

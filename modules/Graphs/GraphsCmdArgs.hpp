@@ -19,7 +19,7 @@ public:
     int l;                  // -l <int, only for Search-on-Graph> number of candidates
 
     int graphNN;    // -k number of Nearest Neighbors in the GRAPH
-    int extensions; // -E number of extensions
+    int expansions; // -E number of extensions
     int restarts;   // -R number of restarts
     int numNn;      // -Ν number of Nearest Neighbors
 
@@ -29,7 +29,7 @@ public:
                                                         m(-1),
                                                         l(-1),
                                                         graphNN(50),
-                                                        extensions(30),
+                                                        expansions(30),
                                                         restarts(1)
     {
         for (int i = 0; i < argc; i++)
@@ -41,7 +41,7 @@ public:
             else if (!strcmp(argv[i], "-k"))
                 graphNN = atoi(argv[i + 1]);
             else if (!strcmp(argv[i], "-E"))
-                extensions = atoi(argv[i + 1]);
+                expansions = atoi(argv[i + 1]);
             else if (!strcmp(argv[i], "-R"))
                 restarts = atof(argv[i + 1]);
             else if (!strcmp(argv[i], "-N"))

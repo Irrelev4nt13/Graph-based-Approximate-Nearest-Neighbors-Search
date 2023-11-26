@@ -5,7 +5,7 @@
 #include "ImageDistance.hpp"
 
 // Initialize static variables
-ImageDistance *ImageDistance::instance = nullptr;
+ImageDistance ImageDistance::instance;
 DistanceMetric ImageDistance::metric;
 bool ImageDistance::isMetricSet = false;
 
@@ -28,16 +28,12 @@ void ImageDistance::setMetric(DistanceMetric inputMetric)
 // Get access to distance helper in order to call calculate. The first time it is called, the instance gets created
 ImageDistance *ImageDistance::getInstance()
 {
-    if (!instance)
+    if (!isMetricSet)
     {
-        if (!isMetricSet)
-        {
-            std::cerr << "Metric must be set before calling getInstance" << std::endl;
-            exit(EXIT_FAILURE);
-        }
-        instance = new ImageDistance();
+        std::cerr << "Metric must be set before calling getInstance" << std::endl;
+        exit(EXIT_FAILURE);
     }
-    return instance;
+    return &instance;
 }
 
 // choose between euclidean and manhattan distances depending on the configuration of the metric

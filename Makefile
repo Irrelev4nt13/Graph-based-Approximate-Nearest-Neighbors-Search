@@ -1,10 +1,9 @@
 CXX := g++
-FLAGS = -std=c++11
+FLAGS = -std=c++11 -Wall -Wextra
 RELEASE_FLAGS := -O2
-DEVELOPMENT_FLAGS := -Wall -Wextra
 DEBUG_FLAGS := -g3 -DDEBUG
 
-FLAGS += $(DEVELOPMENT_FLAGS)
+FLAGS += $(RELEASE_FLAGS)
 
 BIN_DIR := bin
 BUILD_DIR := build
@@ -60,8 +59,8 @@ $(CUBE): $(CUBE_OBJ) $(CUBE_OBJ_MODULES) $(COMMON_OBJ_MODULES)
 $(GRAPH): $(GRAPH_OBJ) $(ALL_OBJ_MODULES)
 	$(CXX) $^ -o $@ $(INCLUDE_FLAGS)
 
-.PHONY: all clean lsh cube graph tests test-lsh test-cube test-graph run-lsh run-cube run-graph \
-valgrind-lsh valgrind-cube valgrind-graph deb-lsh deb-cube deb-graph hpp_dependencies
+.PHONY: all clean lsh cube graph run-lsh run-cube run-graph valgrind-lsh valgrind-cube valgrind-graph \
+ tests test-lsh test-cube test-graph lsh-test cube-test graph-test deb-lsh deb-cube deb-graph
 
 clean:
 	rm -rf $(BIN_DIR)/* $(BUILD_DIR)/*
@@ -76,7 +75,7 @@ ARGS_LSH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-uby
 
 ARGS_CUBE := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 14 -M 6000 -probes 15 -o output_cube.txt -N 5 -R 10000
 
-ARGS_GRAPH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 40 -E 20 -R 1 -N 3 -l 10 -m 2 -o output_graph.txt
+ARGS_GRAPH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 40 -E 30 -R 15 -N 3 -l 10 -m 2 -o output_graph.txt
 
 run-lsh: lsh
 	./$(LSH) $(ARGS_LSH)
@@ -87,6 +86,8 @@ run-cube: cube
 run-graph: graph
 	./$(GRAPH) $(ARGS_GRAPH)
 
+
+# Valgrind targets
 
 VALGRIND_ARGS := --leak-check=full --show-leak-kinds=all --track-origins=yes -s
 
@@ -99,6 +100,54 @@ valgrind-cube: $(CUBE)
 valgrind-graph: $(GRAPH)
 	valgrind $(VALGRIND_ARGS) ./$(GRAPH) $(ARGS_GRAPH)
 
+
+# Test targets
+
+TEST_DIR := tests
+
+TEST_FILES := $(wildcard $(TEST_DIR)/*.cpp)
+
+LSH_TEST := $(BIN_DIR)/lsh_test
+CUBE_TEST := $(BIN_DIR)/cube_test
+GRAPH_TEST := $(BIN_DIR)/graph_test
+
+LSH_TEST_OBJ := $(BUILD_DIR)/lsh_test.o
+CUBE_TEST_OBJ := $(BUILD_DIR)/cube_test.o
+GRAPH_TEST_OBJ := $(BUILD_DIR)/graph_test.o
+
+TEST_EXEC_FILES := $(TEST_FILES:$(TEST_DIR)/%.cpp=$(BIN_DIR)/%)
+
+tests: $(TEST_EXEC_FILES)
+
+$(BUILD_DIR)/%.o: $(TEST_DIR)/%.cpp $(LIBS)
+	$(CXX) -c $(filter-out %.hpp, $<) -o $@ $(INCLUDE_FLAGS) $(FLAGS)
+
+$(LSH_TEST): $(LSH_TEST_OBJ) $(LSH_OBJ_MODULES) $(COMMON_OBJ_MODULES)
+	$(CXX) $^ -o $@ $(INCLUDE_FLAGS)
+
+$(CUBE_TEST): $(CUBE_TEST_OBJ) $(CUBE_OBJ_MODULES) $(COMMON_OBJ_MODULES)
+	$(CXX) $^ -o $@ $(INCLUDE_FLAGS)
+
+$(GRAPH_TEST): $(GRAPH_TEST_OBJ) $(ALL_OBJ_MODULES)
+	$(CXX) $^ -o $@ $(INCLUDE_FLAGS)
+
+lsh-test: $(LSH_TEST)
+
+cube-test: $(CUBE_TEST)
+
+graph-test: $(GRAPH_TEST)
+
+test-lsh: lsh-test
+	./$(LSH_TEST) $(ARGS_LSH)
+
+test-cube: cube-test
+	./$(CUBE_TEST) $(ARGS_CUBE)
+
+test-graph: graph-test
+	./$(GRAPH_TEST) $(ARGS_GRAPH)
+
+
+# Debug targets
 
 $(BUILD_DIR)/%-deb.o: $(MODULES_DIR)/%.cpp
 	@mkdir -p $(@D)
