@@ -18,5 +18,5 @@ private:
 public:
     Mrng(const std::vector<ImagePtr> &images, int numNn, int l);
     ~Mrng();
-    std::vector<Neighbor> Approximate_kNN(ImagePtr query, int k);
+    std::vector<Neighbor> Approximate_kNN(ImagePtr query);
 };

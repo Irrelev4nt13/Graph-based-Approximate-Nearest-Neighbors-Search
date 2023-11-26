@@ -60,7 +60,7 @@ int main(int argc, char const *argv[])
             return EXIT_FAILURE;
         }
         graph_algorithm_name = "MRNG";
-        graphAlgorithm = new Mrng(input_images, args.l, args.numNn);
+        graphAlgorithm = new Mrng(input_images, args.numNn, args.l);
     }
     else
     {
@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
             ImagePtr query = query_images[q];
 
             startClock();
-            std::vector<Neighbor> approx_vector = graphAlgorithm->Approximate_kNN(query, args.numNn);
+            std::vector<Neighbor> approx_vector = graphAlgorithm->Approximate_kNN(query);
             auto elapsed_lsh = stopClock();
 
             startClock();

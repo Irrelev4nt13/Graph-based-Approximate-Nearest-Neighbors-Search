@@ -8,7 +8,7 @@
 class GraphAlgorithm
 {
 public:
-    virtual std::vector<Neighbor> Approximate_kNN(ImagePtr query, int k) = 0;
+    virtual std::vector<Neighbor> Approximate_kNN(ImagePtr query) = 0;
 };
 
 #endif
