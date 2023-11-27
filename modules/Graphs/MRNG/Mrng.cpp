@@ -24,7 +24,7 @@ public:
 void *ThreadFunction(void *threadData)
 {
     ThreadData *data = (ThreadData *)threadData;
-    for (int i = data->startIdx; i < data->endIdx; i++)
+    for (int i = data->startIdx; i <= data->endIdx; i++)
     {
         (*data->Rps)[i] = BruteForce(*data->images, (*data->images)[i], data->images->size());
         (*data->Rps)[i].erase((*data->Rps)[i].begin());
@@ -49,7 +49,10 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
     for (int i = 0; i < numThreads; i++)
     {
         int startIdx = i * imagesPerThread;
-        int endIdx = startIdx + imagesPerThread + (i < remainingImages ? 1 : 0);
+
+        bool addRemaining = startIdx + 2 * imagesPerThread > (int)images.size();
+
+        int endIdx = startIdx + imagesPerThread - 1 + (addRemaining ? remainingImages : 0);
 
         threadData[i] = ThreadData(&Rps, &images, startIdx, endIdx);
 
@@ -60,7 +63,7 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
         }
     }
 
-    for (int i = 0; i < numThreads; ++i)
+    for (int i = 0; i < numThreads; i++)
     {
         pthread_join(threads[i], NULL);
     }
