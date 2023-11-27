@@ -14,6 +14,8 @@ GNNS::GNNS(const std::vector<ImagePtr> &images, int graphNN, int expansions, int
     // Initialize the general distance
     this->distance = ImageDistance::getInstance();
 
+    startClock();
+
     // Initialize lsh which will be used to initialize the graph
     Lsh lsh(images, 4, 5, graphNN + 1, 2240, (int)images.size() / 8);
 
@@ -26,6 +28,9 @@ GNNS::GNNS(const std::vector<ImagePtr> &images, int graphNN, int expansions, int
     for (int i = 0; i < (int)images.size(); i++)
         for (auto neighbor : lsh.Approximate_kNN(images[i]))
             PointsWithNeighbors[i].push_back(neighbor.image);
+
+    auto gnnsDuration = stopClock();
+    std::cout << "GNNS initialized in: " << gnnsDuration.count() * 1e-9 << " seconds" << std::endl;
 }
 
 GNNS::~GNNS() {}
@@ -66,7 +71,6 @@ std::vector<Neighbor> GNNS::Approximate_kNN(ImagePtr query)
     }
     // The set is already sorted so we can skip the sorting step
     // Lastly we want to make a vector from those neighbors
-    // std::vector<Neighbor> KnearestNeighbors(nearestNeighbors.begin(), nearestNeighbors.end());
     std::vector<Neighbor> KnearestNeighbors(nearestNeighbors.begin(), std::next(nearestNeighbors.begin(), std::min(numNn, static_cast<int>(nearestNeighbors.size()))));
     return KnearestNeighbors;
 }
