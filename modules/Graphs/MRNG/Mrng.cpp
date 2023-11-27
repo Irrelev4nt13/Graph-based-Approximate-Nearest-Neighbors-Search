@@ -10,15 +10,19 @@
 class ThreadData
 {
 public:
-    std::vector<std::vector<Neighbor>> *Rps;
+    int id;
+    std::vector<std::vector<ImagePtr>> *graph;
     const std::vector<ImagePtr> *images;
     int startIdx;
     int endIdx;
+    ImageDistance *distHelper;
+    std::vector<std::vector<double>> *sums;
 
     ThreadData() {}
 
-    ThreadData(std::vector<std::vector<Neighbor>> *Rps, const std::vector<ImagePtr> *images, int startIdx, int endIdx)
-        : Rps(Rps), images(images), startIdx(startIdx), endIdx(endIdx) {}
+    ThreadData(int id, std::vector<std::vector<ImagePtr>> *graph, const std::vector<ImagePtr> *images, int startIdx, int endIdx,
+               ImageDistance *distHelper, std::vector<std::vector<double>> *sums)
+        : id(id), graph(graph), images(images), startIdx(startIdx), endIdx(endIdx), distHelper(distHelper), sums(sums) {}
 };
 
 void *ThreadFunction(void *threadData)
@@ -26,8 +30,64 @@ void *ThreadFunction(void *threadData)
     ThreadData *data = (ThreadData *)threadData;
     for (int i = data->startIdx; i <= data->endIdx; i++)
     {
-        (*data->Rps)[i] = BruteForce(*data->images, (*data->images)[i], data->images->size());
-        (*data->Rps)[i].erase((*data->Rps)[i].begin());
+        std::vector<Neighbor> Rp = BruteForce(*data->images, (*data->images)[i], data->images->size());
+        Rp.erase(Rp.begin());
+
+        // Compute the sum in all dimensions of image
+        int dim = (*data->images)[i]->pixels.size();
+        // std::vector<double> sum = (*data->sums)[data->id];
+        (*data->sums)[data->id].resize(dim);
+
+        for (int d = 0; d < dim; d++)
+        {
+            ImagePtr tempImage = (*data->images)[i];
+            (*data->sums)[data->id][d] += tempImage->pixels[d];
+        }
+
+        std::vector<ImagePtr> Lp;
+        double minDistance = Rp[0].distance;
+        for (int j = 0; j < (int)Rp.size(); j++)
+        {
+            if (Rp[j].distance > minDistance)
+            {
+                break; // No more points with the minimum distance to add
+            }
+            Lp.push_back(Rp[j].image);
+        }
+
+        // For each element of Rp check the Mrng condition and add it to Lp
+        for (int r = 0; r < (int)Rp.size(); r++)
+        {
+            if (std::find(Lp.begin(), Lp.end(), Rp[r].image) != Lp.end())
+            {
+                continue; // Point already in Lp
+            }
+
+            // Mrng condition to ensure monotonic path
+            bool condition = true;
+            for (int t = 0; t < (int)Lp.size(); t++)
+            {
+                double prDistance = Rp[r].distance; // same as dist(images[i], Rp[r])
+                // double ptDistance = minDistance;    // same as dist(images[i], Lp[t])
+                double rtDistance = data->distHelper->calculate(Rp[r].image, Lp[t]);
+
+                // prDistance is always greater than ptDistance = minDistance since Rp is sorted
+                // Need to check between prDistance and rtDistance for triangle prt
+                if (prDistance > rtDistance)
+                {
+                    // pr is the longest edge, so it is not a valid neighbor for Mrng
+                    condition = false;
+                    break;
+                }
+            }
+
+            if (condition)
+            {
+                Lp.push_back(Rp[r].image);
+            }
+        }
+
+        (*data->graph)[i] = Lp; // Add neighbors of current image to graph
     }
     return NULL;
 }
@@ -37,9 +97,12 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
 {
     startClock();
 
-    std::vector<std::vector<Neighbor>> Rps(images.size()); // All Rp vectors
+    // std::vector<std::vector<Neighbor>> Rps(images.size()); // All Rp vectors
+
+    graph.resize(images.size());
 
     const int numThreads = 8;
+    std::vector<std::vector<double>> sums(numThreads);
     std::vector<pthread_t> threads(numThreads);
     std::vector<ThreadData> threadData(numThreads);
 
@@ -54,7 +117,7 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
 
         int endIdx = startIdx + imagesPerThread - 1 + (addRemaining ? remainingImages : 0);
 
-        threadData[i] = ThreadData(&Rps, &images, startIdx, endIdx);
+        threadData[i] = ThreadData(i, &graph, &images, startIdx, endIdx, distHelper, &sums);
 
         if (pthread_create(&threads[i], NULL, ThreadFunction, &threadData[i]))
         {
@@ -68,61 +131,87 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
         pthread_join(threads[i], NULL);
     }
 
-    for (std::size_t i = 0; i < images.size(); i++)
+    int dim = images[0]->pixels.size();
+    std::vector<double> totalSum(dim);
+
+    for (int i = 0; i < numThreads; i++)
     {
-        // Calculate only once the navigating node
-        if (!this->navNode)
+        for (int j = 0; j < dim; j++)
         {
-            // Set the median of the dataset as the navigating node
-            this->navNode = Rps[i][images.size() / 2].image;
+            totalSum[j] += sums[i][j];
         }
-
-        // Initialize Lp with points that have the minimum distance to p (images[i])
-        std::vector<ImagePtr> Lp;
-        double minDistance = Rps[i][0].distance;
-        for (int j = 0; j < (int)Rps[i].size(); j++)
-        {
-            if (Rps[i][j].distance > minDistance)
-            {
-                break; // No more points with the minimum distance to add
-            }
-            Lp.push_back(Rps[i][j].image);
-        }
-
-        // For each element of Rp check the Mrng condition and add it to Lp
-        for (int r = 0; r < (int)Rps[i].size(); r++)
-        {
-            if (std::find(Lp.begin(), Lp.end(), Rps[i][r].image) != Lp.end())
-            {
-                continue; // Point already in Lp
-            }
-
-            // Mrng condition to ensure monotonic path
-            bool condition = true;
-            for (int t = 0; t < (int)Lp.size(); t++)
-            {
-                double prDistance = Rps[i][r].distance; // same as dist(images[i], Rp[r])
-                // double ptDistance = minDistance;    // same as dist(images[i], Lp[t])
-                double rtDistance = distHelper->calculate(Rps[i][r].image, Lp[t]);
-
-                // prDistance is always greater than ptDistance = minDistance since Rp is sorted
-                // Need to check between prDistance and rtDistance for triangle prt
-                if (prDistance > rtDistance)
-                {
-                    // pr is the longest edge, so it is not a valid neighbor for Mrng
-                    condition = false;
-                    break;
-                }
-            }
-
-            if (condition)
-            {
-                Lp.push_back(Rps[i][r].image);
-            }
-        }
-
-        graph.push_back(Lp); // Add neighbors of current image to graph
     }
+
+    // calculate mean
+    std::vector<double> meanPixels(dim);
+    for (int i = 0; i < dim; i++)
+    {
+        meanPixels[i] = totalSum[i] / (double)images.size();
+    }
+
+    Image centroid(0, meanPixels); // use dummy id
+
+    // Find the closest image from dataset to centroid with brute force
+
+    std::vector<Neighbor> closest = BruteForce(images, &centroid, 1);
+
+    navNode = images[closest[0].image->id];
+
+    // for (std::size_t i = 0; i < images.size(); i++)
+    // {
+    //     // Calculate only once the navigating node
+    //     if (!this->navNode)
+    //     {
+    //         // Set the median of the dataset as the navigating node
+    //         this->navNode = Rps[i][images.size() / 2].image;
+    //     }
+
+    //     // Initialize Lp with points that have the minimum distance to p (images[i])
+    //     std::vector<ImagePtr> Lp;
+    //     double minDistance = Rps[i][0].distance;
+    //     for (int j = 0; j < (int)Rps[i].size(); j++)
+    //     {
+    //         if (Rps[i][j].distance > minDistance)
+    //         {
+    //             break; // No more points with the minimum distance to add
+    //         }
+    //         Lp.push_back(Rps[i][j].image);
+    //     }
+
+    //     // For each element of Rp check the Mrng condition and add it to Lp
+    //     for (int r = 0; r < (int)Rps[i].size(); r++)
+    //     {
+    //         if (std::find(Lp.begin(), Lp.end(), Rps[i][r].image) != Lp.end())
+    //         {
+    //             continue; // Point already in Lp
+    //         }
+
+    //         // Mrng condition to ensure monotonic path
+    //         bool condition = true;
+    //         for (int t = 0; t < (int)Lp.size(); t++)
+    //         {
+    //             double prDistance = Rps[i][r].distance; // same as dist(images[i], Rp[r])
+    //             // double ptDistance = minDistance;    // same as dist(images[i], Lp[t])
+    //             double rtDistance = distHelper->calculate(Rps[i][r].image, Lp[t]);
+
+    //             // prDistance is always greater than ptDistance = minDistance since Rp is sorted
+    //             // Need to check between prDistance and rtDistance for triangle prt
+    //             if (prDistance > rtDistance)
+    //             {
+    //                 // pr is the longest edge, so it is not a valid neighbor for Mrng
+    //                 condition = false;
+    //                 break;
+    //             }
+    //         }
+
+    //         if (condition)
+    //         {
+    //             Lp.push_back(Rps[i][r].image);
+    //         }
+    //     }
+
+    //     graph.push_back(Lp); // Add neighbors of current image to graph
+    // }
 
     auto mrngDuration = stopClock();
     std::cout << "Mrng index construction finished in: " << mrngDuration.count() * 1e-9 << std::endl;
