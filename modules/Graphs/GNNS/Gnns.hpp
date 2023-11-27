@@ -23,7 +23,7 @@ private:
     int restarts;
     int numNn;
     ImageDistance *distance;
-    std::vector<std::vector<Neighbor>> PointsWithNeighbors;
+    std::vector<std::vector<ImagePtr>> PointsWithNeighbors;
 
 public:
     GNNS(const std::vector<ImagePtr> &images, int graphNN, int expansions, int restarts, int numNn);

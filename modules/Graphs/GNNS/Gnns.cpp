@@ -24,7 +24,8 @@ GNNS::GNNS(const std::vector<ImagePtr> &images, int graphNN, int expansions, int
     // and store them in a 2d vector the first dimension will represent the Image in the input file
     // and the second its neighbors
     for (int i = 0; i < (int)images.size(); i++)
-        PointsWithNeighbors[i] = lsh.Approximate_kNN(images[i]);
+        for (auto neighbor : lsh.Approximate_kNN(images[i]))
+            PointsWithNeighbors[i].push_back(neighbor.image);
 }
 
 GNNS::~GNNS() {}
@@ -50,14 +51,14 @@ std::vector<Neighbor> GNNS::Approximate_kNN(ImagePtr query)
             for (int i = 1; i < expansions + 1; i++)
             {
                 // Calculate the distance of the neighbor with the query
-                double dist = distance->calculate(PointsWithNeighbors[Y_prev][i].image, query);
+                double dist = distance->calculate(PointsWithNeighbors[Y_prev][i], query);
                 // Update set with S U N(Y_t-1,E,G)
-                nearestNeighbors.insert(Neighbor(PointsWithNeighbors[Y_prev][i].image, dist));
+                nearestNeighbors.insert(Neighbor(PointsWithNeighbors[Y_prev][i], dist));
                 // Find Y_t = argmin_Y_in_N(Y_t-1,E,G) δ(Y,query)
                 if (min == -1 || dist < min)
                 {
                     min = dist;
-                    index = PointsWithNeighbors[Y_prev][i].image->id;
+                    index = PointsWithNeighbors[Y_prev][i]->id;
                 }
             }
             Y_prev = index;
