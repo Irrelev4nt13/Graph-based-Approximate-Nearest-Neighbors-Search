@@ -30,7 +30,7 @@ private:
     std::vector<ImagePtr> images;
 
 public:
-    FileParser(std::string inputFile);
+    FileParser(std::string inputFile, int size = -1);
     ~FileParser();
     inline const Metadata &GetMetadata() const { return metadata; }
     inline const std::vector<ImagePtr> &GetImages() const { return images; }

@@ -11,7 +11,7 @@
 #include "Utils.hpp"
 #endif
 
-FileParser::FileParser(std::string inputFile)
+FileParser::FileParser(std::string inputFile, int size)
 {
 
 #ifdef DEBUG
@@ -35,8 +35,11 @@ FileParser::FileParser(std::string inputFile)
     }
 
     metadata.magicNumber = ntohl(metadata.magicNumber);
-    // metadata.numOfImages = ntohl(metadata.numOfImages);
-    metadata.numOfImages = 1000;
+    if (size == -1)
+        metadata.numOfImages = ntohl(metadata.numOfImages);
+    else
+        metadata.numOfImages = size;
+    // metadata.numOfImages = 1000;
     metadata.numOfRows = ntohl(metadata.numOfRows);
     metadata.numOfColumns = ntohl(metadata.numOfColumns);
 

@@ -31,7 +31,7 @@ int main(int argc, char const *argv[])
     readFilenameIfEmpty(args.inputFile, "input");
 
     // Parse file and get the images
-    FileParser inputParser(args.inputFile);
+    FileParser inputParser(args.inputFile, 1000);
     const std::vector<ImagePtr> input_images = inputParser.GetImages();
 
     readFilenameIfEmpty(args.queryFile, "query");
@@ -76,6 +76,8 @@ int main(int argc, char const *argv[])
 
     auto tTotalApproximate = std::chrono::nanoseconds(0);
     auto tTotalTrue = std::chrono::nanoseconds(0);
+    double AAF = 0;
+    int found = 0;
     double MAF = -1;
 
     // Keep reading new query and output files until the user types "exit"
@@ -121,18 +123,18 @@ int main(int argc, char const *argv[])
 
                 if (aproxDist / trueDist > MAF || MAF == -1)
                     MAF = aproxDist / trueDist;
+                AAF += aproxDist / trueDist;
             }
-
+            found += limit;
             output_file << "t" << graph_algorithm_name << ": " << elapsed_graph.count() * 1e-9 << std::endl;
             output_file << "tTrue: " << elapsed_brute.count() * 1e-9 << std::endl;
 
             output_file << std::endl;
         }
 
-        output_file << "tTotalApproximate: " << tTotalApproximate.count() * 1e-9 << std::endl;        // Total Approximate time
-        output_file << "tTotalTrue: " << tTotalTrue.count() * 1e-9 << std::endl;                      // Total True time
         output_file << "tAverageApproximate: " << tTotalApproximate.count() * 1e-9 / 10 << std::endl; // Average Approximate time
         output_file << "tAverageTrue: " << tTotalTrue.count() * 1e-9 / 10 << std::endl;               // Average True time
+        output_file << "AAF: " << AAF / found << std::endl;                                           // Average Approximation Factor
         output_file << "MAF: " << MAF;                                                                // Maximum Approximation Factor
 
         // Read new query and output files.
