@@ -160,11 +160,11 @@ Mrng::~Mrng() {}
 std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query)
 {
     // Initialize R to an empty set
-    std::set<Neighbor, CompareNeighbor> R;
+    std::vector<Neighbor> R;
 
     // Start with the navigating node
     Neighbor p = Neighbor(navNode, distHelper->calculate(navNode, query));
-    R.insert(p);
+    R.push_back(p);
 
     int i = 1;
     int visitedNodes = 0;
@@ -180,16 +180,25 @@ std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query)
         std::vector<ImagePtr> neighborImages = graph[p.image->id];
         for (int k = 0; k < (int)neighborImages.size(); k++)
         {
-            // Insert
-            auto result = R.insert(Neighbor(neighborImages[k], distHelper->calculate(neighborImages[k], query)));
 
-            // Insert succeeded (not a duplicate)
-            if (result.second)
+            ImagePtr temp = neighborImages[k];
+
+            auto it = std::find_if(R.begin(), R.end(), [temp](const Neighbor &neighbor)
+                                   { return neighbor.image == temp; });
+
+            if (it != R.end())
             {
-                i++; // Increment the number of candidates checked
+                // Image already exists in one of the Neighbors in R
+                continue;
             }
+
+            R.push_back(Neighbor(neighborImages[k], distHelper->calculate(neighborImages[k], query)));
+            i++;
         }
     }
+
+    // Sort R
+    std::sort(R.begin(), R.end(), CompareNeighbor());
 
     // Copy the nearest neighbors until numNn or size of R
     std::vector<Neighbor> KnearestNeighbors(R.begin(), std::next(R.begin(), std::min(numNn, static_cast<int>(R.size()))));
