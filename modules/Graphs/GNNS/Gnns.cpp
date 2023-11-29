@@ -1,5 +1,6 @@
 #include <vector>
 #include <set>
+#include <pthread.h>
 
 #include "Image.hpp"
 #include "Lsh.hpp"
@@ -8,16 +9,38 @@
 #include "Gnns.hpp"
 #include "Utils.hpp"
 
+class threadArgs
+{
+public:
+    int start;
+    int end;
+    std::vector<std::vector<ImagePtr>> *storage;
+    std::vector<ImagePtr> images;
+    Lsh *lsh;
+    threadArgs(int start, int end, const std::vector<ImagePtr> &images, Lsh *lsh, std::vector<std::vector<ImagePtr>> *storage) : start(start), end(end), storage(storage), images(images), lsh(lsh) {}
+};
+
+static void *parallel_initialization(void *arg)
+{
+    threadArgs *args = (threadArgs *)arg;
+    for (int i = args->start; i < args->end; i++)
+        for (auto neighbor : args->lsh->Approximate_kNN(args->images[i]))
+            (*args->storage)[i].push_back(neighbor.image);
+
+    delete args;
+    return nullptr;
+}
+
 GNNS::GNNS(const std::vector<ImagePtr> &images, int graphNN, int expansions, int restarts, int numNn)
     : graphNN(graphNN), expansions(expansions), restarts(restarts), numNn(numNn)
 {
     // Initialize the general distance
     this->distance = ImageDistance::getInstance();
 
-    startClock();
-
     // Initialize lsh which will be used to initialize the graph
     Lsh lsh(images, 4, 5, graphNN + 1, 2240, (int)images.size() / 8);
+
+    // startClock();
 
     // In order to avoid multiple reallocs we will resize the vector
     PointsWithNeighbors.resize((int)images.size());
@@ -25,12 +48,24 @@ GNNS::GNNS(const std::vector<ImagePtr> &images, int graphNN, int expansions, int
     // We need to initialize our graph, for every image in the input file we will get its neighbors
     // and store them in a 2d vector the first dimension will represent the Image in the input file
     // and the second its neighbors
-    for (int i = 0; i < (int)images.size(); i++)
-        for (auto neighbor : lsh.Approximate_kNN(images[i]))
-            PointsWithNeighbors[i].push_back(neighbor.image);
+    // for (int i = 0; i < (int)images.size(); i++)
+    //     for (auto neighbor : lsh.Approximate_kNN(images[i]))
+    //         PointsWithNeighbors[i].push_back(neighbor.image);
+    const int threadNum = 4;
+    std::vector<pthread_t> threads(threadNum);
+    for (int i = 0; i < threadNum; i++)
+        pthread_create(&threads[i], nullptr, parallel_initialization,
+                       new threadArgs(i * ((int)images.size() / threadNum),
+                                      (i == threadNum - 1) ? (int)images.size() : (i + 1) * ((int)images.size() / threadNum),
+                                      images,
+                                      &lsh,
+                                      &PointsWithNeighbors));
 
-    auto gnnsDuration = stopClock();
-    std::cout << "GNNS initialized in: " << gnnsDuration.count() * 1e-9 << " seconds" << std::endl;
+    for (int i = 0; i < threadNum; i++)
+        pthread_join(threads[i], nullptr);
+
+    // auto gnnsDuration = stopClock();
+    // std::cout << "GNNS initialized in: " << gnnsDuration.count() * 1e-9 << " seconds" << std::endl;
 }
 
 GNNS::~GNNS() {}
