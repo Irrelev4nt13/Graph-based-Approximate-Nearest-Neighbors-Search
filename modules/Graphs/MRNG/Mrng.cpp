@@ -85,7 +85,9 @@ void *ThreadFunction(void *threadData)
 
         data->graph[i] = Lp; // Add neighbors of current image to graph
     }
-    return NULL;
+
+    delete data;
+    pthread_exit(nullptr);
 }
 
 Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn), candidates(l),
@@ -98,8 +100,6 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
     const int numThreads = 3;
     std::vector<std::vector<double>> sums(numThreads);
     std::vector<pthread_t> threads(numThreads);
-    ThreadData **threadData = new ThreadData *;
-
     int imagesPerThread = images.size() / numThreads;
     int remainingImages = images.size() % numThreads;
 
@@ -111,9 +111,9 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
 
         int endIdx = startIdx + imagesPerThread - 1 + (addRemaining ? remainingImages : 0);
 
-        threadData[i] = new ThreadData(i, graph, images, startIdx, endIdx, distHelper, sums[i]);
+        ThreadData *threadData = new ThreadData(i, graph, images, startIdx, endIdx, distHelper, sums[i]);
 
-        if (pthread_create(&threads[i], NULL, ThreadFunction, threadData[i]))
+        if (pthread_create(&threads[i], NULL, ThreadFunction, threadData))
         {
             std::cerr << "Error creating thread " << i << std::endl;
             return;
