@@ -31,7 +31,7 @@ int main(int argc, char const *argv[])
     readFilenameIfEmpty(args.inputFile, "input");
 
     // Parse file and get the images
-    FileParser inputParser(args.inputFile, 1000);
+    FileParser inputParser(args.inputFile, 5000);
     const std::vector<ImagePtr> input_images = inputParser.GetImages();
 
     readFilenameIfEmpty(args.queryFile, "query");
@@ -93,7 +93,7 @@ int main(int argc, char const *argv[])
 
         // For each query data point calculate its approximate k nearesest neighbors with the preferable graph algorithm and compare it to brute force
         // for (int q = 0; q < (int)query_images.size(); q++)
-        for (int q = 0; q < 10; q++)
+        for (int q = 0; q < 100; q++)
         {
             ImagePtr query = query_images[q];
 
@@ -132,10 +132,10 @@ int main(int argc, char const *argv[])
             output_file << std::endl;
         }
 
-        output_file << "tAverageApproximate: " << tTotalApproximate.count() * 1e-9 / 10 << std::endl; // Average Approximate time
-        output_file << "tAverageTrue: " << tTotalTrue.count() * 1e-9 / 10 << std::endl;               // Average True time
-        output_file << "AAF: " << AAF / found << std::endl;                                           // Average Approximation Factor
-        output_file << "MAF: " << MAF;                                                                // Maximum Approximation Factor
+        output_file << "tAverageApproximate: " << tTotalApproximate.count() * 1e-9 / 100 << std::endl; // Average Approximate time
+        output_file << "tAverageTrue: " << tTotalTrue.count() * 1e-9 / 100 << std::endl;               // Average True time
+        output_file << "AAF: " << AAF / found << std::endl;                                            // Average Approximation Factor
+        output_file << "MAF: " << MAF;                                                                 // Maximum Approximation Factor
 
         // Read new query and output files.
         args.queryFile.clear();

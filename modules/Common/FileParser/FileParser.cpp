@@ -39,7 +39,6 @@ FileParser::FileParser(std::string inputFile, int size)
         metadata.numOfImages = ntohl(metadata.numOfImages);
     else
         metadata.numOfImages = size;
-    // metadata.numOfImages = 1000;
     metadata.numOfRows = ntohl(metadata.numOfRows);
     metadata.numOfColumns = ntohl(metadata.numOfColumns);
 

@@ -123,8 +123,7 @@ int HammingDistance(const int first, const int second)
     return distance;
 }
 
-// static std::random_device generator;
-static std::default_random_engine generator;
+static std::random_device generator;
 
 double RealDistribution(int from, int to)
 {
