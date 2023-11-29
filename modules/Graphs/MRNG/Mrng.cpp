@@ -64,12 +64,12 @@ void *ThreadFunction(void *threadData)
             bool condition = true;
             for (int t = 0; t < (int)Lp.size(); t++)
             {
-                double prDistance = Rp[r].distance; // same as dist(images[i], Rp[r])
+                double prDistance = Rp[r].distance; // same as dist(images[i], Rp[r].image)
+                double ptDistance = data->distHelper->calculate(data->images[i], Lp[t]);
                 double rtDistance = data->distHelper->calculate(Rp[r].image, Lp[t]);
 
-                // prDistance is always greater than ptDistance = minDistance since Rp is sorted
-                // Need to check between prDistance and rtDistance for triangle prt
-                if (prDistance > rtDistance)
+                // Check if pr is the longest edge in the triangle prt
+                if (prDistance > rtDistance && prDistance > ptDistance)
                 {
                     // pr is the longest edge, so it is not a valid neighbor for Mrng
                     condition = false;
@@ -147,7 +147,6 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
     Image centroid(0, meanPixels); // use dummy id
 
     // Find the closest image from dataset to centroid with brute force
-
     std::vector<Neighbor> closest = BruteForce(images, &centroid, 1);
 
     navNode = images[closest[0].image->id];
