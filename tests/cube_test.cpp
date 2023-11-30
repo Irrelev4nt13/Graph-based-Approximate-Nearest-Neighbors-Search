@@ -12,14 +12,15 @@
 
 int main(int argc, char const *argv[])
 {
-    int dimension;
-    int maxCanditates;
-    int probes;
-    int numNn;
+    int dimension = -1;
+    int maxCanditates = -1;
+    int probes = -1;
+    int numNn = -1;
     std::string inputFile;
     std::string queryFile;
-    int w;
+    int w = -1;
     bool show = false;
+    int size = -1;
 
     for (int i = 0; i < argc; i++)
     {
@@ -39,9 +40,11 @@ int main(int argc, char const *argv[])
             w = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "-s"))
             show = true;
+        else if (!strcmp(argv[i], "-f"))
+            size = atoi(argv[i + 1]);
     }
 
-    FileParser inputParser(inputFile);
+    FileParser inputParser(inputFile, size);
     const std::vector<ImagePtr> input_images = inputParser.GetImages();
 
     FileParser queryParser(queryFile);
@@ -75,7 +78,7 @@ int main(int argc, char const *argv[])
         int limit = approx_vector.size();
         for (int i = 0; i < limit; i++)
         {
-            ImagePtr image = approx_vector[i].image;
+            // ImagePtr image = approx_vector[i].image;
             double aproxDist = approx_vector[i].distance;
 
             // std::cout << "Nearest neighbor-" << i + 1 << ": " << image->id << std::endl

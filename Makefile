@@ -75,7 +75,7 @@ ARGS_LSH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-uby
 
 ARGS_CUBE := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 14 -M 6000 -probes 15 -o output_cube.txt -N 5 -R 10000
 
-ARGS_GRAPH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 40 -E 30 -R 15 -N 3 -l 100 -m 2 -o output_graph_mrng_new_changed.txt
+ARGS_GRAPH := -d datasets/train-images.idx3-ubyte -q datasets/t10k-images.idx3-ubyte -k 40 -E 30 -R 10 -N 3 -l 2000 -m 1 -o output_graph.txt
 
 run-lsh: lsh
 	./$(LSH) $(ARGS_LSH)
@@ -129,7 +129,7 @@ $(CUBE_TEST): $(CUBE_TEST_OBJ) $(CUBE_OBJ_MODULES) $(COMMON_OBJ_MODULES)
 	$(CXX) $^ -o $@ $(INCLUDE_FLAGS)
 
 $(GRAPH_TEST): $(GRAPH_TEST_OBJ) $(ALL_OBJ_MODULES)
-	$(CXX) $^ -o $@ $(INCLUDE_FLAGS)
+	$(CXX) $^ -o $@ $(INCLUDE_FLAGS) -pthread
 
 lsh-test: $(LSH_TEST)
 

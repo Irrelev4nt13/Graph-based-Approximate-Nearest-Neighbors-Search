@@ -47,9 +47,9 @@ def execute_test(test_name, args):
 
     return result.stdout.decode('utf-8')
 
-def show_table(transposed_data, results, test_name, graph_type):
+def save_table(transposed_data, results, test_name, graph_type):
     # Create the table
-    table = tabulate(transposed_data, headers=results.keys(), tablefmt="fancy_grid", showindex=False)
+    table = tabulate(transposed_data, headers=results.keys(), tablefmt="fancy_grid", showindex=False, numalign="right", stralign="right")
 
     # Center the title
     if graph_type is None:
@@ -59,9 +59,28 @@ def show_table(transposed_data, results, test_name, graph_type):
     padding = (len(table.split('\n', 1)[0]) - len(title)) // 2
     centered_title = " " * padding + title
 
-    # Print the centered title and table
-    print(f"\n{centered_title}")
-    print(table)
+    if graph_type is None:
+        with open(f"{test_name.upper()}/table.md", "a") as file:
+            # Add a newline before appending the new table if the file is not empty
+            if file.tell() > 0:
+                file.write("\n\n")
+            
+            # Write the new table
+            file.write(title)
+            file.write("\n")
+            file.write(table)
+    else:
+        with open(f"{graph_type.upper()}/table.md", "a") as file:
+            # Add a newline before appending the new table if the file is not empty
+            if file.tell() > 0:
+                file.write("\n\n")
+            
+            # Write the new table
+            file.write(centered_title)
+            file.write("\n")
+            file.write(table)
+
+    print("Tables were saved")
 
 def save_plots(results, test_name, graph_type):
     # Extract names
@@ -133,8 +152,6 @@ if __name__ == "__main__":
     else:
         test_name, graph_type = get_test_name(), None
 
-    execute_make("clean")
-
     execute_make(f"{test_name}-test")
     
     results = {}
@@ -172,7 +189,7 @@ if __name__ == "__main__":
                     else:
                         results[key] = [float(value)]
     elif test_name == "graph" and graph_type == "gnns":
-        for r in range(1, 21):
+        for r in [1, 2, 5, 10, 15, 20, 30, 40, 50, 100, 200, 500, 1000, 2000]:
             output = execute_test(test_name, f"-d ../datasets/train-images.idx3-ubyte -q ../datasets/t10k-images.idx3-ubyte -k 40 -E 30 -R {r} -N 3 -l 10 -m 1 -s")
             output = output.split("\n")
             for curr_output in output:
@@ -188,8 +205,8 @@ if __name__ == "__main__":
                     else:
                         results[key] = [float(value)]
     elif test_name == "graph" and graph_type == "mrng":
-        for l in range(20, 40):
-            output = execute_test(test_name, f"-d ../datasets/train-images.idx3-ubyte -q ../datasets/t10k-images.idx3-ubyte -k 40 -E 30 -R 1 -N 3 -l {l} -m 1 -s")
+        for l in [20, 100, 300, 500, 600, 700, 800, 900, 1000, 2000, 2500]:
+            output = execute_test(test_name, f"-d ../datasets/train-images.idx3-ubyte -q ../datasets/t10k-images.idx3-ubyte -k 40 -E 30 -R 1 -N 3 -l {l} -m 2 -s -f 20000")
             output = output.split("\n")
             for curr_output in output:
                 key, value = curr_output.split(":")
@@ -206,7 +223,7 @@ if __name__ == "__main__":
     # Transpose the data
     transposed_data = list(map(list, zip(*results.values())))
 
-    show_table(transposed_data, results, test_name, graph_type)
+    save_table(transposed_data, results, test_name, graph_type)
 
     save_plots(results, test_name, graph_type)
 

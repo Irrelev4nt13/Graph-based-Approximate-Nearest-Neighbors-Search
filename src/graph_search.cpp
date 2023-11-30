@@ -92,8 +92,7 @@ int main(int argc, char const *argv[])
         output_file << graph_algorithm_name << " Results" << std::endl;
 
         // For each query data point calculate its approximate k nearesest neighbors with the preferable graph algorithm and compare it to brute force
-        // for (int q = 0; q < (int)query_images.size(); q++)
-        for (int q = 0; q < 100; q++)
+        for (int q = 0; q < (int)query_images.size(); q++)
         {
             ImagePtr query = query_images[q];
 

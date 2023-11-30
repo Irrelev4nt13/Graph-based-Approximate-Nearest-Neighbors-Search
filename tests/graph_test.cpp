@@ -15,13 +15,14 @@ int main(int argc, char const *argv[])
 {
     std::string inputFile;
     std::string queryFile;
-    int graphNN;
-    int expansions;
-    int restarts;
-    int numNn;
-    int l;
-    int m;
+    int graphNN = -1;
+    int expansions = -1;
+    int restarts = -1;
+    int numNn = -1;
+    int l = -1;
+    int m = -1;
     bool show = false;
+    int size = -1;
 
     for (int i = 0; i < argc; i++)
     {
@@ -43,10 +44,12 @@ int main(int argc, char const *argv[])
             m = atoi(argv[i + 1]);
         else if (!strcmp(argv[i], "-s"))
             show = true;
+        else if (!strcmp(argv[i], "-f"))
+            size = atoi(argv[i + 1]);
     }
 
     // Parse file and get the images
-    FileParser inputParser(inputFile);
+    FileParser inputParser(inputFile, size);
     const std::vector<ImagePtr> input_images = inputParser.GetImages();
 
     // Get query images
@@ -59,13 +62,6 @@ int main(int argc, char const *argv[])
     // Initialize Graphs
     GraphAlgorithm *algorithm = nullptr;
 
-    double exp_tTotalApproximate = 0;
-    double exp_tTotalTrue = 0;
-    double exp_AAF = 0;
-    double exp_MAF = 0;
-
-    // for (int experiment = 0; experiment < 3; experiment++)
-    // {
     if (m == 1)
         // GNNS initialization
         algorithm = new GNNS(input_images, graphNN, expansions, restarts, numNn);
@@ -94,7 +90,7 @@ int main(int argc, char const *argv[])
         int limit = approx_vector.size();
         for (int i = 0; i < limit; i++)
         {
-            ImagePtr image = approx_vector[i].image;
+            // ImagePtr image = approx_vector[i].image;
             double aproxDist = approx_vector[i].distance;
 
             // std::cout << "Nearest neighbor-" << i + 1 << ": " << image->id << std::endl
@@ -122,28 +118,6 @@ int main(int argc, char const *argv[])
     std::cout << "AAF:" << AAF / found << std::endl;
     std::cout << "MAF:" << MAF; // << std::endl << std::endl;
 
-    // exp_tTotalApproximate += tTotalApproximate.count() * 1e-9 / 1000;
-    // exp_tTotalTrue += tTotalTrue.count() * 1e-9 / 1000;
-    // exp_AAF += AAF / found;
-    // exp_MAF += MAF;
-    // }
-
-    // // if (m == 1 && show)
-    // //     std::cout << "R:" << restarts << std::endl;
-    // // else if (m == 2 && show)
-    // //     std::cout << "l:" << l << std::endl;
-    // // std::cout << "exp_tAverageApproximate:" << exp_tTotalApproximate / 3 << std::endl;
-    // // std::cout << "exp_tAverageTrue:" << exp_tTotalTrue / 3 << std::endl;
-    // // std::cout << "exp_AAF:" << exp_AAF / 3 << std::endl;
-    // // std::cout << "exp_MAF:" << exp_MAF / 3;
-    // if (m == 1 && show)
-    //     std::cout << "R:" << restarts << std::endl;
-    // else if (m == 2 && show)
-    //     std::cout << "l:" << l << std::endl;
-    // std::cout << "tAverageApproximate:" << exp_tTotalApproximate / 3 << std::endl;
-    // std::cout << "tAverageTrue:" << exp_tTotalTrue / 3 << std::endl;
-    // std::cout << "AAF:" << exp_AAF / 3 << std::endl;
-    // std::cout << "MAF:" << exp_MAF / 3;
     delete algorithm;
 
     return EXIT_SUCCESS;
