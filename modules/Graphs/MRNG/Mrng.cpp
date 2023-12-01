@@ -97,7 +97,7 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
 
     graph.resize(images.size());
 
-    const int numThreads = 8;
+    const int numThreads = 4;
     std::vector<std::vector<double>> sums(numThreads);
     std::vector<pthread_t> threads(numThreads);
     int imagesPerThread = images.size() / numThreads;
@@ -242,19 +242,19 @@ Mrng::Mrng(const std::vector<ImagePtr> &images, int numNn, int l) : numNn(numNn)
 
 Mrng::~Mrng() {}
 
-class NeighborSet
+class NeighborInSet
 {
 public:
     Neighbor neighbor;
     bool checked;
 
-    NeighborSet(ImagePtr image, double distance, bool checked) : neighbor(image, distance), checked(checked) {}
+    NeighborInSet(ImagePtr image, double distance, bool checked) : neighbor(image, distance), checked(checked) {}
 };
 
-class CompareNeighborSet
+class CompareNeighborInSet
 {
 public:
-    bool operator()(const NeighborSet &a, const NeighborSet &b) const
+    bool operator()(const NeighborInSet &a, const NeighborInSet &b) const
     {
         // Compare based on the double value (distance) within Neighbor objects.
         return a.neighbor.distance < b.neighbor.distance;
@@ -264,10 +264,10 @@ public:
 std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query)
 {
     // Initialize R to an empty set
-    std::set<NeighborSet, CompareNeighborSet> R;
+    std::set<NeighborInSet, CompareNeighborInSet> R;
 
     // Start with the navigating node
-    NeighborSet p = NeighborSet(navNode, distHelper->calculate(navNode, query), false);
+    NeighborInSet p = NeighborInSet(navNode, distHelper->calculate(navNode, query), false);
     R.insert(p);
 
     int i = 1;
@@ -281,14 +281,14 @@ std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query)
         {
             if (!it->checked)
             {
-                // Erase the existing NeighborSet and insert the updated one
+                // Erase the existing NeighborInSet and insert the updated one
                 R.erase(it);
 
                 // Mark the element as checked
-                NeighborSet updatedNeighborSet = *it;
-                updatedNeighborSet.checked = true;
+                NeighborInSet updatedNeighborInSet = *it;
+                updatedNeighborInSet.checked = true;
 
-                R.insert(updatedNeighborSet);
+                R.insert(updatedNeighborInSet);
 
                 p = *it; // update p
                 break;
@@ -297,11 +297,11 @@ std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query)
 
         visitedNodes++;
 
-        // Get neighbors based on the graph index
+        // Get neighbors of p based on the graph
         std::vector<ImagePtr> neighborImages = graph[p.neighbor.image->id];
         for (int k = 0; k < (int)neighborImages.size(); k++)
         {
-            NeighborSet element = NeighborSet(neighborImages[k], distHelper->calculate(neighborImages[k], query), false);
+            NeighborInSet element = NeighborInSet(neighborImages[k], distHelper->calculate(neighborImages[k], query), false);
             auto result = R.insert(element);
             if (result.second) // insert succeeded
             {
@@ -311,16 +311,15 @@ std::vector<Neighbor> Mrng::Approximate_kNN(ImagePtr query)
     }
     std::vector<Neighbor> KnearestNeighbors;
 
-    // Iterate through 'R' and extract Neighbor objects
-    for (const auto &neighborSet : R)
+    // Iterate R and extract Neighbor objects
+    for (const auto &NeighborInSet : R)
     {
-        // Check if you've collected enough neighbors
         if ((int)KnearestNeighbors.size() >= numNn)
         {
             break;
         }
 
-        KnearestNeighbors.push_back(neighborSet.neighbor);
+        KnearestNeighbors.push_back(NeighborInSet.neighbor);
     }
 
     return KnearestNeighbors;
